@@ -1,0 +1,59 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id                 String             @id @db.VarChar(110)
+  name               String             @db.VarChar(255)
+  price              Int
+  image              String?            @db.VarChar(255)
+  created_at         DateTime?          @default(now()) @db.Timestamp(0)
+  updated_at         DateTime?          @default(now()) @db.Timestamp(0)
+  transactions_items TransactionsItem[]
+
+  @@map("products")
+}
+
+model Transaction {
+  id                 String              @id @db.VarChar(110)
+  total              Int
+  status             transactions_status
+  customer_name      String              @db.VarChar(255)
+  customer_email     String              @db.VarChar(255)
+  snap_token         String?             @db.VarChar(255)
+  snap_redirect_url  String?             @db.VarChar(255)
+  payment_method     String?             @db.VarChar(110)
+  created_at         DateTime?           @default(now()) @db.Timestamp(0)
+  updated_at         DateTime?           @default(now()) @db.Timestamp(0)
+  transactions_items TransactionsItem[]
+
+  @@map("transactions")
+}
+
+model TransactionsItem {
+  id             String      @id @db.VarChar(110)
+  transaction_id String      @db.VarChar(110)
+  product_id     String      @db.VarChar(110)
+  product_name   String      @db.VarChar(255)
+  price          Int
+  quantity       Int
+  created_at     DateTime?   @default(now()) @db.Timestamp(0)
+  updated_at     DateTime?   @default(now()) @db.Timestamp(0)
+  transactions   Transaction @relation(fields: [transaction_id], references: [id], onUpdate: Restrict, map: "transactions_items_ibfk_1")
+  products       Product     @relation(fields: [product_id], references: [id], onUpdate: Restrict, map: "transactions_items_ibfk_2")
+
+  @@index([product_id], map: "product_id")
+  @@index([transaction_id], map: "transaction_id")
+  @@map("transactions_items")
+}
+
+enum transactions_status {
+  PENDING_PAYMENT
+  PAID
+  CANCELED
+}
